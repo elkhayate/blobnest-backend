@@ -1,30 +1,31 @@
 import dotenv from "dotenv";
 dotenv.config();
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth";
+import usersRoutes from "./routes/users";
 import { setupMiddleware } from "./middleware";
 import logger from "./config/logger";
 
+
 const app = express();
-
-// Setup all middleware
-setupMiddleware(app);
-
-// CORS configuration
-app.use(cors());
-
-// Routes
-app.use("/api/auth", authRoutes);
-
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error('Unhandled error:', { error: err });
-  res.status(500).json({ message: 'Internal server error' });
-});
-
 const PORT = process.env.PORT || 3000;
 
+setupMiddleware(app);
+app.use(cors());
+app.use("/api/users", usersRoutes);
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  logger.error("Unhandled error:", { 
+    error: err.message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined
+  });
+  
+  res.status(500).json({ 
+    status: "error",
+    message: "Internal server error"
+  });
+});
+
 app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
+  logger.info(`🚀 Server running in ${process.env.NODE_ENV || "development"} mode on http://localhost:${PORT}`);
 });
