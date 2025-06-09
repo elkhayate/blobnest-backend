@@ -6,13 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/index.ts",
-    "dev": "nodemon --watch 'src/**/*.ts'  --exec ts-node src/index.ts"
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/storage-blob": "^12.27.0",
     "@supabase/supabase-js": "^2.49.10",
+    "@types/multer": "^1.4.13",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -22,6 +24,7 @@
     "helmet": "^8.1.0",
     "joi": "^17.13.3",
     "morgan": "^1.10.0",
+    "multer": "^2.0.1",
     "postgres": "^3.4.7",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",

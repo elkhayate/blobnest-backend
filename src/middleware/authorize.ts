@@ -3,7 +3,7 @@ import { UserRequest } from "../types";
 import { supabaseAdmin } from "../services/supabase";
 import { User } from "@supabase/supabase-js";
 
-type Role = "admin" | "user";
+type Role = "admin" | "viewer" | "uploader";
 
 export const authorize = (allowedRoles: Role[]) => {
   return async (req: UserRequest, res: Response, next: NextFunction) => {

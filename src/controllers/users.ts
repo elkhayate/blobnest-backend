@@ -7,6 +7,8 @@ import {
   updateUserSchema,
   getUsersQuerySchema,
   userIdParamsSchema,
+  updateUserInfoSchema,
+  updateCompanyInfoSchema,
 } from "../validations/users";
 
 export const getUsers = async (req: UserRequest, res: Response) => {
@@ -19,7 +21,6 @@ export const getUsers = async (req: UserRequest, res: Response) => {
 
     const { search, role, page, rowsPerPage } = queryResult.data;
 
-    // Get the authenticated user's company info
     const authUser = req.user;
     if (!authUser) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -28,7 +29,6 @@ export const getUsers = async (req: UserRequest, res: Response) => {
     const { data: { users: allUsers }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     if (listError) throw listError;
 
-    // Filter users by company_id and exclude current user
     let filteredUsers = allUsers.filter(user => 
       user.user_metadata?.company_id === authUser.user_metadata?.company_id &&
       user.id !== authUser.id
@@ -69,6 +69,7 @@ export const getUsers = async (req: UserRequest, res: Response) => {
       rowsPerPage,
       totalPages: Math.ceil(total / rowsPerPage)
     });
+
   } catch (error) {
     logger.error("Error fetching users:", error);
     res.status(500).json({ error: "Failed to fetch users" });
@@ -218,8 +219,130 @@ export const deleteUser = async (req: UserRequest, res: Response) => {
   }
 };
 
-const generateCompanyId = (companyName: string) => {
-  const normalized = companyName.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const randomId = Math.random().toString(36).substring(2, 7);
-  return `${normalized}-${randomId}`;
-};
+export const getUserAndCompanyInfo = async (req: UserRequest, res: Response) => {
+  try {
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { data: { user }, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(authUser.id);
+    if (getUserError) throw getUserError;
+    if (!user) throw new Error("User not found");
+
+    if(user.user_metadata?.role !== "admin"){
+      return res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.user_metadata?.role,
+          display_name: user.user_metadata?.display_name,
+        },
+        company: null
+      });
+    }
+
+    const companyId = user.user_metadata?.company_id;
+    if (!companyId) {
+      return res.status(400).json({ error: "User has no associated company" });
+    }
+
+    let { data: company, error: companyError } = await supabaseAdmin
+      .from('companies')
+      .select('*')
+      .eq('company_id', companyId)
+      .single();
+
+    if (companyError && companyError.code !== 'PGRST116') { 
+      throw companyError;
+    }
+
+    if (!company) {
+      const { data: newCompany, error: createError } = await supabaseAdmin
+        .from('companies')
+        .insert({
+          company_id: companyId,
+          company_name: user.user_metadata?.company_name
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      company = newCompany;
+    }
+
+    res.json({ 
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.user_metadata?.role,
+        display_name: user.user_metadata?.display_name,
+      },
+      company
+    });
+
+  } catch (error) {
+    console.log(error);
+    logger.error("Error getting user and company info:", error);
+    res.status(500).json({ error: "Failed to get user and company info", message: error });
+  }
+}
+
+export const updateUserInfo = async (req: UserRequest, res: Response) => {
+  try {
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const validationResult = updateUserInfoSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ error: validationResult.error.format() });
+    }
+
+    const { email, display_name } = validationResult.data;
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      authUser.id,
+      {
+        email,
+        user_metadata: { display_name }
+      }
+    );
+
+    if (updateError) throw updateError;
+
+    res.json({ message: "User info updated successfully" });
+  } catch (error) {
+    logger.error("Error updating user info:", error);
+    res.status(500).json({ error: "Failed to update user info", message: error });
+  }
+}
+
+export const updateCompanyInfo = async (req: UserRequest, res: Response) => {
+  try {
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const validationResult = updateCompanyInfoSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ error: validationResult.error.format() });
+    }
+
+    const { storage_account_name, sas_token } = validationResult.data; 
+
+    const { error: updateError } = await supabaseAdmin.from('companies').update({
+      storage_account_name,
+      sas_token
+    }).eq('company_id', authUser.user_metadata?.company_id);
+
+    if (updateError) throw updateError;
+
+    res.json({ message: "Company info updated successfully" });
+  } catch (error) {
+    logger.error("Error updating company info:", error);
+    res.status(500).json({ error: "Failed to update company info", message: error });
+  }
+}
