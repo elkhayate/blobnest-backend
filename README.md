@@ -55,7 +55,4 @@ Frontend repository: [BlobNest Frontend](https://github.com/elkhayate/blobnest-f
 - Supabase Account
 - TypeScript
 - npm or yarn
-
-## Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
+ 
