@@ -7,6 +7,8 @@ import { setupMiddleware } from "./middleware";
 import logger from "./config/logger";
 import containersRoutes from "./routes/containers";
 import filesRoutes from "./routes/files";
+import auditLogsRoutes from "./routes/audit-logs";
+import dashboardRoutes from "./routes/dashboard";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +19,8 @@ app.use(cors());
 app.use("/api/users", usersRoutes);
 app.use("/api/containers", containersRoutes);
 app.use("/api/files", filesRoutes);
+app.use("/api/audit-logs", auditLogsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   logger.error("Unhandled error:", { 
