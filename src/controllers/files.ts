@@ -206,22 +206,17 @@ export const updateFile = async (req: UserRequest, res: Response) => {
         const containerClient = blobServiceClient.getContainerClient(containerName);
         const blockBlobClient = containerClient.getBlobClient(fileName);
 
-        // Update metadata if provided
         if (metadata) {
             await blockBlobClient.setMetadata(metadata);
         }
 
-        // Update content type if provided
         if (contentType) {
             await blockBlobClient.setHTTPHeaders({
                 blobContentType: contentType
             });
         }
 
-        console.log(metadata,111)
-
         const fileDetails = await getFileDetails(blockBlobClient);
-        // Add container name to the response
         const response = {
             ...fileDetails,
             containerName
@@ -315,7 +310,7 @@ export const getAllFiles = async (req: UserRequest, res: Response) => {
                 });
             }
         }
-        console.log(allFiles);
+        
         let filteredFiles = allFiles;
         if (search) {
             filteredFiles = filteredFiles.filter(file => 

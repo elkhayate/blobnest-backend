@@ -15,7 +15,6 @@ export const getUsers = async (req: UserRequest, res: Response) => {
   try {
     const queryResult = getUsersQuerySchema.safeParse(req.query);
     if (!queryResult.success) {
-      console.log(queryResult.error.format());
       return res.status(400).json({ error: queryResult.error.format() });
     }
 
@@ -282,7 +281,6 @@ export const getUserAndCompanyInfo = async (req: UserRequest, res: Response) => 
     });
 
   } catch (error) {
-    console.log(error);
     logger.error("Error getting user and company info:", error);
     res.status(500).json({ error: "Failed to get user and company info", message: error });
   }

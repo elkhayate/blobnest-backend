@@ -26,7 +26,7 @@ async function getContainerDetails(containerClient: any) {
         totalSize += blob.properties.contentLength || 0;
         blobCount++;
     }
-    console.log(containerClient);
+
     return {
         accountName: containerClient._containerName,
         isHttps: containerClient.isHttps,
