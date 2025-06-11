@@ -82,7 +82,6 @@ export const createUser = async (req: UserRequest, res: Response) => {
       return res.status(400).json({ error: validationResult.error.format() });
     }
 
-    // Get the authenticated user's company info
     const authUser = req.user;
     if (!authUser) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -137,27 +136,22 @@ export const updateUser = async (req: UserRequest, res: Response) => {
     const { userId } = paramsResult.data;
     const { email, role, display_name } = validationResult.data;
 
-    // Get current user data
     const { data: { user }, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (getUserError) throw getUserError;
     if (!user) throw new Error("User not found");
 
-    // Get the authenticated user's company info
     const authUser = req.user;
     if (!authUser) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Verify the user belongs to the same company
     if (user.user_metadata?.company_id !== authUser.user_metadata?.company_id) {
       return res.status(403).json({ error: "Cannot update user from different company" });
     }
 
-    // Prepare update data
     const updateData: any = {};
     if (email) updateData.email = email;
     
-    // Merge existing metadata with new metadata, preserving company info
     const updatedMetadata = {
       ...user.user_metadata,
       ...(role && { role }),
@@ -192,18 +186,15 @@ export const deleteUser = async (req: UserRequest, res: Response) => {
 
     const { userId } = paramsResult.data;
 
-    // Get the user to verify company
     const { data: { user }, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (getUserError) throw getUserError;
     if (!user) throw new Error("User not found");
 
-    // Get the authenticated user's company info
     const authUser = req.user;
     if (!authUser) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Verify the user belongs to the same company
     if (user.user_metadata?.company_id !== authUser.user_metadata?.company_id) {
       return res.status(403).json({ error: "Cannot delete user from different company" });
     }

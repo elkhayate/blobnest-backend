@@ -9,7 +9,6 @@ import {
     updateFileSchema, 
     fileParamsSchema 
 } from "../validations/files";
-import { BlobSASPermissions } from "@azure/storage-blob";
 
 function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
@@ -25,7 +24,6 @@ async function getFileDetails(blobClient: any) {
     const properties = await blobClient.getProperties();
     const metadata = properties.metadata || {};
     
-    // Format metadata for display
     const formattedMetadata = Object.entries(metadata).map(([key, value]) => ({
         key,
         value: String(value),

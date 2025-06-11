@@ -13,7 +13,6 @@ interface ActivityEvent {
     size: number;
 }
 
-// Helper function to get date range based on timeRange
 function getDateRange(timeRange: 'day' | 'week' | 'month' | 'year'): { start: Date; end: Date } {
     const end = new Date();
     const start = new Date();
@@ -62,16 +61,14 @@ export const getDashboardStats = async (req: UserRequest, res: Response) => {
 
         const blobServiceClient = getBlobServiceClient(company.storage_account_name, company.sas_token);
         
-        // Get total containers
         const containers = [];
         const containersIterator = blobServiceClient.listContainers();
         for await (const container of containersIterator) {
-            if (!container.name.startsWith('$')) { // Exclude system containers
+            if (!container.name.startsWith('$')) { 
                 containers.push(container.name);
             }
         }
 
-        // Get total files, size, and file types across all containers
         let totalFiles = 0;
         let totalSize = 0;
         const fileTypes = new Set<string>();
@@ -85,10 +82,8 @@ export const getDashboardStats = async (req: UserRequest, res: Response) => {
             for await (const blob of blobsIterator) {
                 totalFiles++;
                 totalSize += blob.properties.contentLength || 0;
-                // Extract file extension and add to unique set
                 const fileExtension = blob.name.split('.').pop()?.toLowerCase();
                 if (fileExtension) {
-                    // Group similar file types
                     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension)) {
                         fileTypes.add('image');
                     } else if (['pdf'].includes(fileExtension)) {
@@ -114,7 +109,6 @@ export const getDashboardStats = async (req: UserRequest, res: Response) => {
             });
         }
 
-        // Get total users from Supabase Auth
         const { data: users, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
         if (usersError) throw usersError;
 
@@ -122,7 +116,6 @@ export const getDashboardStats = async (req: UserRequest, res: Response) => {
             user.user_metadata?.company_id === authUser.user_metadata?.company_id
         ).length;
 
-        // Try to get change feed data if available
         let activityMetrics = {
             uploads: 0,
             downloads: 0,
@@ -167,7 +160,6 @@ export const getDashboardStats = async (req: UserRequest, res: Response) => {
                     }
                 }
 
-                // Calculate activity metrics
                 activityMetrics = {
                     uploads: recentActivity.filter(a => a.operation === 'BlobCreated').length,
                     downloads: recentActivity.filter(a => a.operation === 'BlobRead').length,
@@ -175,7 +167,6 @@ export const getDashboardStats = async (req: UserRequest, res: Response) => {
                     totalOperations: recentActivity.length
                 };
 
-                // Sort and limit recent activity
                 recentActivity = recentActivity
                     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
                     .slice(0, 10);
@@ -236,7 +227,6 @@ export const getStorageMetrics = async (req: UserRequest, res: Response) => {
         const blobServiceClient = getBlobServiceClient(company.storage_account_name, company.sas_token);
         const { start, end } = getDateRange(timeRange);
 
-        // Get storage metrics from change feed
         const changeFeedContainer = blobServiceClient.getContainerClient('$blobchangefeed');
         const storageMetrics = {
             dailyUploads: new Map<string, number>(),
@@ -302,7 +292,6 @@ export const getStorageMetrics = async (req: UserRequest, res: Response) => {
             logger.error("Error accessing change feed:", error);
         }
 
-        // Convert maps to arrays for response
         const response = {
             uploads: Array.from(storageMetrics.dailyUploads.entries()).map(([date, count]) => ({
                 date,
@@ -356,7 +345,6 @@ export const getContainerMetrics = async (req: UserRequest, res: Response) => {
         const blobServiceClient = getBlobServiceClient(company.storage_account_name, company.sas_token);
         const containerClient = blobServiceClient.getContainerClient(containerName);
         
-        // Check if container exists
         const exists = await containerClient.exists();
         if (!exists) {
             return res.status(404).json({ error: "Container not found" });
@@ -364,7 +352,6 @@ export const getContainerMetrics = async (req: UserRequest, res: Response) => {
 
         const { start, end } = getDateRange(timeRange);
 
-        // Get container metrics from change feed
         const changeFeedContainer = blobServiceClient.getContainerClient('$blobchangefeed');
         const containerMetrics = {
             dailyUploads: new Map<string, number>(),
@@ -439,7 +426,6 @@ export const getContainerMetrics = async (req: UserRequest, res: Response) => {
             logger.error("Error accessing change feed:", error);
         }
 
-        // Get current container stats
         const blobs = [];
         const blobsIterator = containerClient.listBlobsFlat();
         for await (const blob of blobsIterator) {
@@ -454,7 +440,6 @@ export const getContainerMetrics = async (req: UserRequest, res: Response) => {
                 null
         };
 
-        // Convert maps to arrays for response
         const response = {
             currentStats,
             uploads: Array.from(containerMetrics.dailyUploads.entries()).map(([date, count]) => ({
@@ -486,7 +471,6 @@ export const getContainerMetrics = async (req: UserRequest, res: Response) => {
     }
 };
 
-// Helper function to convert stream to string
 async function streamToString(readableStream: any): Promise<string> {
     return new Promise((resolve, reject) => {
         const chunks: any[] = [];

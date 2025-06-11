@@ -16,6 +16,7 @@
     "@azure/storage-blob-changefeed": "^12.0.0-preview.4",
     "@supabase/supabase-js": "^2.49.10",
     "@types/multer": "^1.4.13",
+    "@upstash/redis": "^1.35.0",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

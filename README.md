@@ -30,6 +30,13 @@ Frontend repository: [BlobNest Frontend](https://github.com/elkhayate/blobnest-f
   - Activity tracking
   - Change feed integration
 
+- **Caching & Performance**
+  - Redis-powered response caching
+  - Smart cache invalidation
+  - Configurable TTL settings
+  - User-specific cache isolation
+  - Real-time cache monitoring
+
 - **Audit Logging**
   - Comprehensive activity tracking
   - Operation history
@@ -42,6 +49,7 @@ Frontend repository: [BlobNest Frontend](https://github.com/elkhayate/blobnest-f
 - **Language**: TypeScript
 - **Database**: Supabase (PostgreSQL)
 - **Storage**: Azure Blob Storage
+- **Cache**: Redis (Upstash)
 - **Authentication**: Supabase Auth
 - **Validation**: Zod
 - **Logging**: Winston
@@ -53,6 +61,7 @@ Frontend repository: [BlobNest Frontend](https://github.com/elkhayate/blobnest-f
 - Node.js (v16 or higher)
 - Azure Storage Account with Blob Storage
 - Supabase Account
+- Redis instance (Upstash recommended)
 - TypeScript
 - npm or yarn
  
